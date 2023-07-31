@@ -4,30 +4,57 @@ import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  // write a function that takes in a json file and console logs the contents of the file
+
+  const readFile = (file) => {
+    const input = document.getElementById(file);
+    const reader = new FileReader();
+    reader.readAsText(input.files[0]);
+    reader.onload = async function () {
+      const text = reader.result;
+      const unformattedJson = JSON.parse(text);
+      const formattedJson = formatter(unformattedJson);
+      createAndSaveFile(formattedJson);
+    };
+  }
+
+  const createAndSaveFile = (content) => {
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'labels.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  const formatter = (json) => {
+    let formattedJson = '';
+    if (json.labels) {
+      Object.keys(json.labels).forEach((key) => {
+        formattedJson += json.labels[key].map((label) => {
+          return JSON.stringify({
+            "type": 'tx',
+            "ref": key,
+            "label": label
+          }) + '\n';
+        })
+      });
+    }
+    console.log(formattedJson.replaceAll(/,/g, ''));
+    return formattedJson.replaceAll(/,/g, '');
+  }
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <h1>Sparrow Label Converter</h1>
+      <input type='file' id='fileInput' accept='.json'></input>
+      <div id='convertButton--div'>
+        <button id='convertButton' onClick={() => { readFile('fileInput') }} >Convert</button>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
