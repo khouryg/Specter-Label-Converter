@@ -5,8 +5,6 @@ import './App.css'
 
 function App() {
 
-  // write a function that takes in a json file and console logs the contents of the file
-
   const readFile = (file) => {
     const input = document.getElementById(file);
     const reader = new FileReader();
@@ -15,6 +13,7 @@ function App() {
       const text = reader.result;
       const unformattedJson = JSON.parse(text);
       const formattedJson = formatter(unformattedJson);
+      console.log(unformattedJson);
       createAndSaveFile(formattedJson);
     };
   }
@@ -33,19 +32,30 @@ function App() {
 
   const formatter = (json) => {
     let formattedJson = '';
+    // add ref for addresses and labels
     if (json.labels) {
-      Object.keys(json.labels).forEach((key) => {
-        formattedJson += json.labels[key].map((label) => {
-          return JSON.stringify({
-            "type": 'tx',
-            "ref": key,
+      Object.keys(json.labels).forEach((label) => {
+        json.labels[label].forEach((ref) => {
+          formattedJson += JSON.stringify({
+            "type": 'addr',
+            "ref": ref,
             "label": label
           }) + '\n';
         })
       });
     }
-    console.log(formattedJson.replaceAll(/,/g, ''));
-    return formattedJson.replaceAll(/,/g, '');
+    if (json.keys) {
+      console.log(json.keys);
+      json.keys.forEach((key) => {
+        formattedJson += JSON.stringify({
+          "type": 'xpub',
+          "ref": key.original,
+          "label": key.fingerprint
+        }) + '\n';
+      });
+    }
+
+    return formattedJson.trimEnd();
   }
 
   return (
